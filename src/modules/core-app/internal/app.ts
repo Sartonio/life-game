@@ -84,16 +84,12 @@ async function startIsland(host: HTMLElement, game: Game): Promise<void> {
   const bounds = worldLayer.getLocalBounds();
   viewport.moveCenter(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
 
-  // ── DOM overlay ────────────────────────────────────────────────────────────
+  // ── DOM overlay: the fixed HUD layer (.lg-hud makes children interactive) ──
   const overlay = document.createElement('div');
-  overlay.style.position = 'fixed';
-  overlay.style.inset = '0';
-  overlay.style.pointerEvents = 'none';
+  overlay.className = 'lg-hud';
   host.appendChild(overlay);
 
   const dock = (el: HTMLElement, position: Partial<CSSStyleDeclaration>): void => {
-    el.style.position = 'absolute';
-    el.style.pointerEvents = 'auto';
     Object.assign(el.style, position);
     overlay.appendChild(el);
   };
@@ -103,17 +99,19 @@ async function startIsland(host: HTMLElement, game: Game): Promise<void> {
       game.completeNextTask();
     },
   });
-  tasksPanel.el.style.background = 'rgba(10, 14, 20, 0.85)';
-  tasksPanel.el.style.color = '#e8e6df';
-  tasksPanel.el.style.padding = '12px';
   tasksPanel.el.style.maxWidth = '320px';
-  dock(tasksPanel.el, { top: '16px', right: '16px' });
+  dock(tasksPanel.el, { top: '16px', left: '16px' });
 
   const xpBar = createXpBar();
   dock(xpBar.el, { top: '16px', left: '50%', transform: 'translateX(-50%)' });
 
-  const reflect = createReflectButton();
-  dock(reflect.el, { bottom: '16px', right: '16px' });
+  // Bottom-right corner cluster: dev panel stacked above the reflect button.
+  const corner = document.createElement('div');
+  corner.style.display = 'flex';
+  corner.style.flexDirection = 'column';
+  corner.style.alignItems = 'flex-end';
+  corner.style.gap = '8px';
+  dock(corner, { bottom: '16px', right: '16px' });
 
   // Dev "plant fully grown" arms a flag; the NEXT modal-confirmed plant goes
   // through devPlantFullyGrown instead of plantAt (normal modal flow).
@@ -126,10 +124,10 @@ async function startIsland(host: HTMLElement, game: Game): Promise<void> {
       plantGrownArmed = true;
     },
   });
-  devPanel.el.style.background = 'rgba(10, 14, 20, 0.85)';
-  devPanel.el.style.color = '#e8e6df';
-  devPanel.el.style.padding = '8px';
-  dock(devPanel.el, { bottom: '16px', left: '16px' });
+  corner.appendChild(devPanel.el);
+
+  const reflect = createReflectButton();
+  corner.appendChild(reflect.el);
 
   const modal = createPlantingModal({
     onPlant: ({ tile, templateKey, type }) => {

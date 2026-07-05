@@ -3,6 +3,7 @@ import { GOAL_TEMPLATES } from '../../config/index.ts';
 import type { TileCoord, TreeType } from '../../config/index.ts';
 import { availableTreeTypes } from '../../systems/index.ts';
 import type { GameplayState } from '../../systems/index.ts';
+import { ensureStyles } from './styles.ts';
 
 export interface PlantChoice {
   tile: TileCoord;
@@ -21,9 +22,10 @@ export interface PlantingModal {
   isOpen(): boolean;
 }
 
-function button(testid: string, label: string): HTMLButtonElement {
+function button(testid: string, label: string, variant?: 'primary' | 'ghost'): HTMLButtonElement {
   const b = document.createElement('button');
   b.type = 'button';
+  b.className = variant === undefined ? 'lg-btn' : `lg-btn lg-btn--${variant}`;
   b.dataset['testid'] = testid;
   b.textContent = label;
   b.style.margin = '2px';
@@ -39,30 +41,27 @@ function button(testid: string, label: string): HTMLButtonElement {
  * `open` only resets it, so repeated opens never stack nodes or listeners.
  */
 export function createPlantingModal(deps: PlantingModalDeps): PlantingModal {
+  ensureStyles();
   const el = document.createElement('div');
-  el.className = 'planting-modal';
+  el.className = 'planting-modal lg-modal';
   el.dataset['testid'] = 'planting-modal';
   el.style.display = 'none';
-  el.style.position = 'absolute';
-  el.style.padding = '12px';
-  el.style.border = '1px solid #555';
-  el.style.background = '#222';
-  el.style.color = '#eee';
-  el.style.fontFamily = 'sans-serif';
 
   const chat = document.createElement('textarea');
+  chat.className = 'lg-input';
   chat.dataset['testid'] = 'chat-placeholder';
   chat.disabled = true;
   chat.placeholder = 'Goal-setting chat coming soon — use Autofill below.';
   chat.style.display = 'block';
   chat.style.width = '240px';
   chat.style.height = '64px';
+  chat.style.marginBottom = 'var(--lg-space-2)';
   el.appendChild(chat);
 
   // Tree-type selector: A always offered; B only when the state unlocks it.
   const typeRow = document.createElement('div');
-  const typeA = button('tree-type-a', 'Tree A');
-  const typeB = button('tree-type-b', 'Tree B'); // attached only when offered
+  const typeA = button('tree-type-a', 'Tree A', 'ghost');
+  const typeB = button('tree-type-b', 'Tree B', 'ghost'); // attached only when offered
   typeRow.append(typeA);
   el.appendChild(typeRow);
 
@@ -75,7 +74,7 @@ export function createPlantingModal(deps: PlantingModalDeps): PlantingModal {
   typeA.addEventListener('click', () => selectType('A'));
   typeB.addEventListener('click', () => selectType('B'));
 
-  const autofill = button('autofill', 'Autofill');
+  const autofill = button('autofill', 'Autofill', 'primary');
   el.appendChild(autofill);
 
   // Template options live here; emptied on every open/close, filled by Autofill.
@@ -104,7 +103,7 @@ export function createPlantingModal(deps: PlantingModalDeps): PlantingModal {
     templates.replaceChildren(sleep, workout);
   });
 
-  const cancel = button('modal-cancel', 'Cancel');
+  const cancel = button('modal-cancel', 'Cancel', 'ghost');
   cancel.addEventListener('click', close);
   el.appendChild(cancel);
 
