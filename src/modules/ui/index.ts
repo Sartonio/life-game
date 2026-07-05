@@ -1,4 +1,6 @@
 // Public surface of the ui module. Other modules import ONLY from here.
+export type { AuthScreen, AuthScreenDeps } from './internal/auth-screen.ts';
+export { createAuthScreen } from './internal/auth-screen.ts';
 export type { DevPanel, DevPanelDeps } from './internal/dev-panel.ts';
 export { createDevPanel } from './internal/dev-panel.ts';
 export type { PlantChoice, PlantingModal, PlantingModalDeps } from './internal/planting-modal.ts';
