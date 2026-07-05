@@ -1,33 +1,60 @@
-# Slice A1 — Art manifest + loader (module `assets` only)
+# Slice B1 — Design tokens + shared classes (module `ui` only)
 
-Stacks on slice/p-a0-art (art files at public/art/, served at /art/*.png):
-tile-dead, tile-vibrancy-1, tile-vibrancy-2, tile-vibrant, tile-fog,
-tree-a-stage-1..5, tree-b-stage-1..5 (15 files).
+UI polish pass, slice B1. Polish-lane module: no coverage floor, but lint,
+boundaries, typecheck, knip, and format all gate.
 
-Implement in `assets` (full-lane module, but keep code trivial):
+## Scope
 
-1. `ART_MANIFEST`: typed map from semantic keys to URL strings. Keys reflect
-   the NEW vibrancy model (tile land state is vibrancy 0-3, plus fog for
-   unrevealed): tile keys for vibrancy 0 (dead) -> /art/tile-dead.png,
-   1 -> /art/tile-vibrancy-1.png, 2 -> /art/tile-vibrancy-2.png,
-   3 -> /art/tile-vibrant.png; fog key -> /art/tile-fog.png; tree keys for
-   both TreeType ('A'|'B') x stages 1-5. Typed shape render can index
-   without casts: lookup by vibrancy number 0-3 or (type, stage) is
-   type-safe.
-2. `loadArt(): Promise<ArtTextures>` — ONE `Assets.load` call over the
-   manifest URLs (Pixi 8 Assets API), returning textures keyed the same way
-   as the manifest. Export the `ArtTextures` type. Thin wrapper, untested
-   (no Pixi loading in tests).
-3. KEEP existing color exports (TILE_COLORS, TREE_STAGE_COLORS) — render
-   still uses them until A2. Do not delete anything render imports.
-4. Tests (example-based, no Pixi): manifest covers exactly the expected
-   keys (4 vibrancy + fog + 2 types x 5 stages = 15), all URLs distinct,
-   all start with /art/ and end with .png, stages 1-5 present for both
-   types. Test through the module's public index.ts.
+- New internal file `src/modules/ui/internal/styles.ts` + its tests.
+- Do NOT touch any other module or any existing component in this slice
+  (wiring `ensureStyles()` into component factories is slice B2).
+- Keep every existing `data-testid` untouched.
+- `ui` stays pure DOM — no Pixi, no CSS files, no new packages.
 
-Constraints: only src/modules/assets/**. assets already allows pixi.js.
-No new packages. No module-map.json change if not needed.
+## `ensureStyles()`
 
-Finish: pnpm verify AND pnpm build green.
-Ship: pnpm pr "feat(assets): art manifest+loader", PR base slice/p-a0-art,
-branch slice/p-a1-art-manifest.
+Injects a single `<style id="lg-styles">` tag into `document.head` exactly
+once — idempotent: calling it N times leaves exactly one tag.
+
+Export policy: prefer keeping it internal (tests import from the module's OWN
+internal path, which is allowed); only export from `index.ts` if needed by
+tests/B2 and knip does not complain.
+
+## CSS custom properties on `:root`
+
+- `--lg-bg-panel` — dark surface, #1e222c family derived from the fog tile
+  (#191c23 / #333944)
+- `--lg-fg` — near-white warm grey
+- `--lg-accent` — living green #64a047, hover-bright #9eca4e
+- `--lg-accent-2` — teal #309395, deep #185e6b
+- `--lg-danger` — muted warm red fitting a painterly palette (e.g. #c0503e)
+- `--lg-radius`, `--lg-space-1`, `--lg-space-2`, `--lg-space-3`
+- `--lg-font` — system UI stack
+- `--lg-shadow`
+
+## Classes (all namespaced `lg-`)
+
+- `.lg-btn` base + `.lg-btn--primary` (accent bg), `.lg-btn--ghost`
+  (transparent bg, subtle border), `.lg-btn--danger`; each with hover/active
+  states and a clearly inert disabled state (reduced opacity + not-allowed
+  cursor + no hover change).
+- `.lg-panel` — bg-panel surface, radius, shadow, padding.
+- `.lg-modal-backdrop` — fixed full-screen dimmer; `.lg-modal` — centered
+  panel.
+- `.lg-input` — dark field, accent focus ring.
+- `.lg-bar` (track) + `.lg-bar__fill` (accent fill, `transition: width`) +
+  a `[data-full]` rule giving the fill a soft glow/pulse.
+
+## Tests (first, happy-dom, module's existing test pattern)
+
+- Idempotent injection: multiple `ensureStyles()` calls → exactly one
+  `#lg-styles` tag.
+- Sheet text contains every token name and every class name listed above.
+- No pixel/visual assertions.
+
+## Done
+
+- `pnpm verify` AND `pnpm build` green (stop and report after 3 identical
+  failures — no hacking around).
+- Ship: `pnpm pr "feat(ui): tokens + shared classes"` (draft PR, base main;
+  branch `slice/p-b1-ui-tokens` if needed).
