@@ -1,33 +1,27 @@
-# Slice A1 — Art manifest + loader (module `assets` only)
+# Slice A2 — sprite art in render
 
-Stacks on slice/p-a0-art (art files at public/art/, served at /art/*.png):
-tile-dead, tile-vibrancy-1, tile-vibrancy-2, tile-vibrant, tile-fog,
-tree-a-stage-1..5, tree-b-stage-1..5 (15 files).
+Replace Graphics color diamonds with Sprites from the loaded textures.
 
-Implement in `assets` (full-lane module, but keep code trivial):
+1. Pure part: replace `colorForTile` with `textureKeyForTile(state, vibrancy)`
+   returning a semantic key (fog wins over vibrancy; vibrancy 0..3 map to the
+   four tile textures). Rewrite polish-lane color-mapping tests to cover it.
+2. Tiles: one Sprite per tile, texture via textureKeyForTile, width 64 /
+   height 32, positioned by tileToScreen. Full-redraw strategy stays.
+3. Trees: one Sprite per TreeViewModel, texture `tex.tree[type][stage]`,
+   `anchor.set(0.5, 1)`, positioned at tile center, uniform scale so a
+   stage-5 tree reads ~2 tiles tall (96/384 = 0.25 — do NOT normalize
+   per-stage height; the growth ladder is baked into the 256x384 canvas).
+4. Depth: sortableChildren on container(s); zIndex = screenY on tree sprites;
+   tiles render under all trees.
+5. Wiring: drawWorld/updateWorld/updateTrees keep names/roles but take (or
+   close over) the loaded ArtTextures; core-app app.ts gains ONE
+   `await loadArt()` during boot and passes textures through.
+6. Cleanup: delete TILE_COLORS/TREE_STAGE_COLORS from assets if unused after
+   the swap (knip). Rewrite remaining palette tests (polish-lane — replace,
+   don't delete pure-helper coverage).
+7. Constraints: no new dependencies, no spritesheet packer, no diffing/perf
+   work. render may import pixi.js and assets. Keep every data-testid.
 
-1. `ART_MANIFEST`: typed map from semantic keys to URL strings. Keys reflect
-   the NEW vibrancy model (tile land state is vibrancy 0-3, plus fog for
-   unrevealed): tile keys for vibrancy 0 (dead) -> /art/tile-dead.png,
-   1 -> /art/tile-vibrancy-1.png, 2 -> /art/tile-vibrancy-2.png,
-   3 -> /art/tile-vibrant.png; fog key -> /art/tile-fog.png; tree keys for
-   both TreeType ('A'|'B') x stages 1-5. Typed shape render can index
-   without casts: lookup by vibrancy number 0-3 or (type, stage) is
-   type-safe.
-2. `loadArt(): Promise<ArtTextures>` — ONE `Assets.load` call over the
-   manifest URLs (Pixi 8 Assets API), returning textures keyed the same way
-   as the manifest. Export the `ArtTextures` type. Thin wrapper, untested
-   (no Pixi loading in tests).
-3. KEEP existing color exports (TILE_COLORS, TREE_STAGE_COLORS) — render
-   still uses them until A2. Do not delete anything render imports.
-4. Tests (example-based, no Pixi): manifest covers exactly the expected
-   keys (4 vibrancy + fog + 2 types x 5 stages = 15), all URLs distinct,
-   all start with /art/ and end with .png, stages 1-5 present for both
-   types. Test through the module's public index.ts.
-
-Constraints: only src/modules/assets/**. assets already allows pixi.js.
-No new packages. No module-map.json change if not needed.
-
-Finish: pnpm verify AND pnpm build green.
-Ship: pnpm pr "feat(assets): art manifest+loader", PR base slice/p-a0-art,
-branch slice/p-a1-art-manifest.
+Finish: `pnpm verify` AND `pnpm build` green; check /art assets copied to dist.
+Ship: branch slice/p-a2-sprite-art, draft PR base slice/p-a1-art-manifest,
+body notes it stacks on #17 AND #20.
