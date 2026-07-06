@@ -83,6 +83,7 @@ async function startIsland(host: HTMLElement, game: Game): Promise<void> {
   const treeLayer = new Container();
   viewport.addChild(worldLayer, treeLayer);
 
+  viewport.setZoom(2);
   const bounds = worldLayer.getLocalBounds();
   viewport.moveCenter(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
 
