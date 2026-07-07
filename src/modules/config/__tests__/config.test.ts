@@ -4,7 +4,6 @@ import {
   STAGE_TASKS,
   TASKS_PER_TREE,
   REVEAL_SIZE,
-  UNLOCK_COSTS,
   UNLOCK_COST_BY_SECTION,
   ISLAND_LAYOUT,
   STORY_BLOCKS,
@@ -76,10 +75,6 @@ describe('config · tunable numbers', () => {
 
   it('REVEAL_SIZE is the 3×3 dead→vibrant reveal', () => {
     expect(REVEAL_SIZE).toEqual({ width: 3, height: 3 });
-  });
-
-  it('UNLOCK_COSTS === [4,8,16,32,64,128]', () => {
-    expect(UNLOCK_COSTS).toEqual([4, 8, 16, 32, 64, 128]);
   });
 
   it('UNLOCK_COST_BY_SECTION maps each locked section id to its cost, in layout order', () => {

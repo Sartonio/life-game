@@ -1,5 +1,5 @@
 // Internal implementation. Deep imports from other modules are blocked by lint.
-import { UNLOCK_COSTS } from '../../config/index.ts';
+import { UNLOCK_COST_BY_SECTION } from '../../config/index.ts';
 import { fullyGrownCount, xpProgress } from '../../systems/index.ts';
 import type { GameplayState } from '../../systems/index.ts';
 import { isSectionUnlocked } from '../../world/index.ts';
@@ -11,8 +11,11 @@ export interface XpBar {
 
 /** Cost of the lowest locked section, or undefined when all are unlocked. */
 function nextUnlockCost(state: GameplayState): number | undefined {
-  for (let id = 2; id <= UNLOCK_COSTS.length + 1; id++) {
-    if (!isSectionUnlocked(state.world, id)) return UNLOCK_COSTS[id - 2]!;
+  const entries = Object.entries(UNLOCK_COST_BY_SECTION)
+    .map(([id, cost]) => [Number(id), cost] as const)
+    .sort(([a], [b]) => a - b);
+  for (const [id, cost] of entries) {
+    if (!isSectionUnlocked(state.world, id)) return cost;
   }
   return undefined;
 }
