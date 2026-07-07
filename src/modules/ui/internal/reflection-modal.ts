@@ -1,6 +1,7 @@
 // Internal implementation. Deep imports from other modules are blocked by lint.
 import type { ChatSession } from './chat-panel.ts';
 import { createChatPanel } from './chat-panel.ts';
+import { ensureStyles } from './styles.ts';
 
 export interface ReflectionModalDeps {
   /** Fresh reflection conversation per open; absent = no API key configured. */
@@ -20,20 +21,15 @@ export interface ReflectionModal {
  * notice. DOM is built once at creation — open only resets it.
  */
 export function createReflectionModal(deps: ReflectionModalDeps): ReflectionModal {
+  ensureStyles();
   const el = document.createElement('div');
-  el.className = 'reflection-modal';
+  el.className = 'reflection-modal lg-modal';
   el.dataset['testid'] = 'reflection-modal';
   el.style.display = 'none';
-  el.style.position = 'absolute';
-  el.style.padding = '12px';
-  el.style.border = '1px solid #555';
-  el.style.background = '#222';
-  el.style.color = '#eee';
-  el.style.fontFamily = 'sans-serif';
 
   const title = document.createElement('div');
   title.textContent = 'Reflect';
-  title.style.marginBottom = '8px';
+  title.style.marginBottom = 'var(--lg-space-2)';
   el.appendChild(title);
 
   const chat = createChatPanel();
@@ -41,9 +37,10 @@ export function createReflectionModal(deps: ReflectionModalDeps): ReflectionModa
 
   const closeButton = document.createElement('button');
   closeButton.type = 'button';
+  closeButton.className = 'reflection-close lg-btn lg-btn--ghost';
   closeButton.dataset['testid'] = 'reflection-close';
   closeButton.textContent = 'Close';
-  closeButton.style.marginTop = '8px';
+  closeButton.style.marginTop = 'var(--lg-space-2)';
   el.appendChild(closeButton);
 
   let openState = false;

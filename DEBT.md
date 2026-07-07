@@ -10,35 +10,18 @@ Entry format — one heading, one metadata line, one description paragraph:
 ```text
 ## DEBT-<n>: <title>
 severity: low|medium|high — module: <name|-> — found: YYYY-MM-DD — status: open|fixed|wontfix
+```
 
 One paragraph: what is wrong, where it lives, and why it was not fixed in
 the task that found it.
-```
 
-Rules: ids are unique and never reused; `module` is a module-map name, or `-`
-for cross-cutting debt; entries are never deleted — flip `status` to `fixed`
-(adding a `fixed-by: <ref>` line directly under the metadata line) or
-`wontfix` instead, so the ledger stays a history.
-
-## DEBT-1: game.ts autosave/auth path uncovered
-
-severity: low — module: core-app — found: 2026-07-05 — status: fixed
-fixed-by: feature/debt-1-game-autosave-tests
-
-Lines ~180-185 of src/modules/core-app/internal/game.ts (the autosave/auth
-path) have no test coverage. Found during the 2026-07-05 framework audit;
-left unfixed because exercising the path needs gateway fakes beyond the
-sync task's scope.
-
-## DEBT-2: UNLOCK_COSTS[id-2] non-null assertions encode the section layout
-
-severity: low — module: systems — found: 2026-07-05 — status: fixed
-fixed-by: feature/debt-2-unlock-cost-lookup
-
-`UNLOCK_COSTS[id - 2]!` non-null assertions encode the sections-2..7
-convention in two places in the systems module — brittle if the island
-layout ever changes shape. Left as-is because a layout-independent lookup
-is a design change, not a sync-task fix.
+Rules: ids are unique and never reused (removed ids stay retired; the next
+entry continues the sequence); flip `status` to `fixed` (adding a
+`fixed-by: <ref>` line directly under the metadata line) or `wontfix`
+rather than deleting an active entry. Entries whose fix has shipped may be
+pruned in a later pass — their history lives in git — while `wontfix`
+entries stay, since they record still-current decisions. Retired ids so
+far: DEBT-1, DEBT-2, DEBT-5, DEBT-6, DEBT-7.
 
 ## DEBT-3: _example module counts in the coverage aggregate
 
@@ -56,42 +39,3 @@ src/modules/save/internal/supabase-gateways.ts sits at ~5% coverage as a
 deliberately thin adapter over supabase-js. Wontfix while it stays
 shell-thin: testing it would mock the SDK end to end for no logic gain;
 promote to tested code if logic ever accumulates there.
-
-## DEBT-5: Quoted redirect targets bypass the bash always-block
-
-severity: low — module: - — found: 2026-07-05 — status: fixed
-fixed-by: feature/debt-5-scope-guard-quoted-redirect
-
-`echo x > '.task/allowed-files.json'` escapes the scope-guard's always-block
-on the scope file and the audit ledger because quote-stripping runs before
-write-operand extraction, so a quoted redirect target vanishes before it can
-be matched. Accepted for now: the Bash layer is an anti-accident heuristic,
-not an adversary boundary (CLAUDE.md rule 5), and every escape is logged to
-edit-log.jsonl; closing it would require a real shell tokenizer.
-
-## DEBT-6: Anthropic API key ships to the browser bundle
-
-severity: medium — module: coach — found: 2026-07-06 — status: fixed
-fixed-by: feature/debt-6-coach-proxy
-
-The coach transport calls the Anthropic API directly from the browser with
-`dangerouslyAllowBrowser`, so `VITE_ANTHROPIC_API_KEY` is embedded in the
-client bundle and visible to anyone with the page. Acceptable for the v1
-local prototype (key lives only in the developer's .env.local); must move
-behind a server-side proxy before any deployment.
-
-## DEBT-7: UI shared-classes sweep (PR #19) never reached main
-
-severity: medium — module: ui — found: 2026-07-07 — status: open
-
-PR #19 (`feat(ui): apply shared classes across every ui component`,
-commit ac6f519 on `slice/p-b2-ui-sweep`) merged into its stacked base
-`slice/p-b1-ui-tokens` AFTER that base had already merged to main, so the
-sweep never landed: `styles.ts` defines the `lg-` classes and
-`ensureStyles()`, but no component imports them — every UI factory still
-uses per-component inline styling. Not re-applied when found (2026-07-07
-merge audit) because the branch is three days stale against a heavily
-diverged main (art pass, vibrancy, coach UI) and the approved sprite
-visual checks were made against the current inline-styled UI; porting the
-sweep needs a fresh pass with its own visual review, not a mechanical
-rebase of ac6f519.
