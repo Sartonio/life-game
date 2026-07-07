@@ -1,4 +1,5 @@
 // Internal implementation. Deep imports from other modules are blocked by lint.
+import { ensureStyles } from './styles.ts';
 
 /**
  * What the chat panel needs from a conversation. Structurally matched by the
@@ -23,27 +24,32 @@ const OFFLINE_NOTICE = 'Chat is unavailable.';
 
 /** Shared chat UI for the goal and reflection coaches: log + input + send. */
 export function createChatPanel(): ChatPanel {
+  ensureStyles();
   const el = document.createElement('div');
+  el.className = 'chat-panel';
   el.dataset['testid'] = 'chat-panel';
 
   const log = document.createElement('div');
+  log.className = 'chat-log lg-input';
   log.dataset['testid'] = 'chat-log';
   log.style.width = '280px';
   log.style.height = '160px';
   log.style.overflowY = 'auto';
-  log.style.border = '1px solid #555';
-  log.style.padding = '6px';
-  log.style.marginBottom = '6px';
+  log.style.marginBottom = 'var(--lg-space-2)';
   el.appendChild(log);
 
   const row = document.createElement('div');
+  row.style.display = 'flex';
+  row.style.gap = 'var(--lg-space-1)';
   const input = document.createElement('input');
   input.type = 'text';
+  input.className = 'chat-input lg-input';
   input.dataset['testid'] = 'chat-input';
   input.placeholder = 'Type a message…';
-  input.style.width = '210px';
+  input.style.flex = '1';
   const send = document.createElement('button');
   send.type = 'button';
+  send.className = 'chat-send lg-btn lg-btn--primary';
   send.dataset['testid'] = 'chat-send';
   send.textContent = 'Send';
   row.append(input, send);
