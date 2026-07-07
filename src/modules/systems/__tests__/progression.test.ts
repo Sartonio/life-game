@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { TASKS_PER_TREE, UNLOCK_COSTS } from '../../config/index.ts';
+import { TASKS_PER_TREE, UNLOCK_COST_BY_SECTION } from '../../config/index.ts';
 import type { Tree } from '../../config/index.ts';
 import { createWorld, isSectionUnlocked, tileState } from '../../world/index.ts';
 import { applyProgression, availableTreeTypes, fullyGrownCount, xpProgress } from '../index.ts';
@@ -47,7 +47,7 @@ describe('systems (progression)', () => {
 
   it('counts partial trees fractionally in xpProgress but not toward the unlock trigger', () => {
     const state = stateWith(0, [9]);
-    expect(xpProgress(state)).toBe(0.5 / UNLOCK_COSTS[0]);
+    expect(xpProgress(state)).toBe(0.5 / (UNLOCK_COST_BY_SECTION[2] ?? NaN));
     expect(fullyGrownCount(state.trees)).toBe(0);
     const state2 = stateWith(3, [TASKS_PER_TREE - 1]);
     const after = applyProgression(state2);
@@ -87,7 +87,7 @@ describe('systems (progression)', () => {
   });
 
   it('reports progress 1 when every section is unlocked', () => {
-    const state = stateWith(UNLOCK_COSTS[UNLOCK_COSTS.length - 1]!);
+    const state = stateWith(Math.max(...Object.values(UNLOCK_COST_BY_SECTION)));
     const after = applyProgression(state);
     for (const section of after.world.sections) {
       expect(isSectionUnlocked(after.world, section.id)).toBe(true);

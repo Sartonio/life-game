@@ -69,9 +69,6 @@ export const TASKS_PER_TREE = 18;
 /** The 3×3 dead→vibrant reveal. */
 export const REVEAL_SIZE = { width: 3, height: 3 } as const;
 
-/** Fully-grown trees needed to unlock sections 2..7. */
-export const UNLOCK_COSTS = [4, 8, 16, 32, 64, 128] as const;
-
 /** Highest vibrancy a tile can reach; totals above this clamp down. */
 export const VIBRANCY_MAX = 3;
 
@@ -117,15 +114,19 @@ export const ISLAND_LAYOUT: SectionDef[] = [
   { id: 7, unlockedAtStart: false, tiles: rectTiles(12, 17, 2, 7) }, // 36
 ];
 
+/** Fully-grown trees needed to unlock the locked sections, in layout order. */
+const UNLOCK_COST_SEQUENCE = [4, 8, 16, 32, 64, 128] as const;
+
 /**
  * Fully-grown-tree cost to unlock a section, keyed by section id. Derived
  * from ISLAND_LAYOUT: the locked sections, in layout order, take
- * UNLOCK_COSTS in order. A section id with no entry (unlocked at start, or
- * unknown) has no unlock cost and is never unlockable via progression.
+ * UNLOCK_COST_SEQUENCE in order. A section id with no entry (unlocked at
+ * start, or unknown) has no unlock cost and is never unlockable via
+ * progression.
  */
 export const UNLOCK_COST_BY_SECTION: Readonly<Record<number, number>> = Object.fromEntries(
   ISLAND_LAYOUT.filter((section) => !section.unlockedAtStart).flatMap((section, index) => {
-    const cost = UNLOCK_COSTS[index];
+    const cost = UNLOCK_COST_SEQUENCE[index];
     return cost === undefined ? [] : [[section.id, cost]];
   }),
 );

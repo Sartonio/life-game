@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { describe, it, expect } from 'vitest';
-import { TASKS_PER_TREE, UNLOCK_COSTS } from '../../config/index.ts';
+import { TASKS_PER_TREE, UNLOCK_COST_BY_SECTION } from '../../config/index.ts';
 import type { Tree } from '../../config/index.ts';
 import { createTree } from '../../entities/index.ts';
 import type { GameplayState } from '../../systems/index.ts';
@@ -67,15 +67,19 @@ describe('ui / xp bar', () => {
     const bar = createXpBar();
 
     bar.update(stateWith([]));
-    expect(query(bar.el, 'xp-bar-label')?.textContent).toBe(`0 / ${UNLOCK_COSTS[0]!}`);
+    expect(query(bar.el, 'xp-bar-label')?.textContent).toBe(
+      `0 / ${UNLOCK_COST_BY_SECTION[2] ?? NaN}`,
+    );
 
     bar.update(stateWith(grownTrees(4), [2]));
-    expect(query(bar.el, 'xp-bar-label')?.textContent).toBe(`4 / ${UNLOCK_COSTS[1]!}`);
+    expect(query(bar.el, 'xp-bar-label')?.textContent).toBe(
+      `4 / ${UNLOCK_COST_BY_SECTION[3] ?? NaN}`,
+    );
   });
 
   it('labels MAX when every section is unlocked', () => {
     const bar = createXpBar();
-    const allSections = UNLOCK_COSTS.map((_, i) => i + 2);
+    const allSections = Object.keys(UNLOCK_COST_BY_SECTION).map(Number);
     bar.update(stateWith(grownTrees(1), allSections));
 
     expect(query(bar.el, 'xp-bar-label')?.textContent).toBe('MAX');

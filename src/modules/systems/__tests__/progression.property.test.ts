@@ -3,7 +3,7 @@
 // cost, never below it.
 import { describe, it, expect } from 'vitest';
 import fc from 'fast-check';
-import { TASKS_PER_TREE, UNLOCK_COSTS, UNLOCK_COST_BY_SECTION } from '../../config/index.ts';
+import { TASKS_PER_TREE, UNLOCK_COST_BY_SECTION } from '../../config/index.ts';
 import type { Tree } from '../../config/index.ts';
 import { createWorld, isSectionUnlocked, unlockSection } from '../../world/index.ts';
 import { applyProgression } from '../index.ts';
@@ -19,7 +19,7 @@ function fullyGrown(count: number): Tree[] {
   }));
 }
 
-const maxCost = Math.max(...UNLOCK_COSTS);
+const maxCost = Math.max(...Object.values(UNLOCK_COST_BY_SECTION));
 const unlockableIds = Object.keys(UNLOCK_COST_BY_SECTION).map(Number);
 
 describe('systems (progression, property-based)', () => {

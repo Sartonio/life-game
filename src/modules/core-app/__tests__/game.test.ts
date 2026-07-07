@@ -2,7 +2,7 @@
 // gateways. No Pixi, no DOM — pure event flow from sign-in to save.
 import { describe, expect, it } from 'vitest';
 import type { TileCoord } from '../../config/index.ts';
-import { GOAL_TEMPLATES, TASKS_PER_TREE, UNLOCK_COSTS } from '../../config/index.ts';
+import { GOAL_TEMPLATES, TASKS_PER_TREE, UNLOCK_COST_BY_SECTION } from '../../config/index.ts';
 import { createNullGateways, toSave } from '../../save/index.ts';
 import type { Gateways } from '../../save/index.ts';
 import { activeTrees, availableTreeTypes, stageOf, xpProgress } from '../../systems/index.ts';
@@ -185,7 +185,7 @@ describe('progression — fully grown trees unlock the island', () => {
     const state = game.state();
     // The 4th grown tree fills the XP requirement for section 2 …
     expect(state.trees.filter((tree) => tree.tasksDone === TASKS_PER_TREE)).toHaveLength(4);
-    expect(UNLOCK_COSTS[0]).toBe(4);
+    expect(UNLOCK_COST_BY_SECTION[2]).toBe(4);
     // … which lifts section 2's fog …
     expect(isSectionUnlocked(state.world, 2)).toBe(true);
     expect(tileState(state.world, { x: 7, y: 1 })).toBe('dead');
