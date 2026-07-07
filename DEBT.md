@@ -79,3 +79,19 @@ The coach transport calls the Anthropic API directly from the browser with
 client bundle and visible to anyone with the page. Acceptable for the v1
 local prototype (key lives only in the developer's .env.local); must move
 behind a server-side proxy before any deployment.
+
+## DEBT-7: UI shared-classes sweep (PR #19) never reached main
+
+severity: medium — module: ui — found: 2026-07-07 — status: open
+
+PR #19 (`feat(ui): apply shared classes across every ui component`,
+commit ac6f519 on `slice/p-b2-ui-sweep`) merged into its stacked base
+`slice/p-b1-ui-tokens` AFTER that base had already merged to main, so the
+sweep never landed: `styles.ts` defines the `lg-` classes and
+`ensureStyles()`, but no component imports them — every UI factory still
+uses per-component inline styling. Not re-applied when found (2026-07-07
+merge audit) because the branch is three days stale against a heavily
+diverged main (art pass, vibrancy, coach UI) and the approved sprite
+visual checks were made against the current inline-styled UI; porting the
+sweep needs a fresh pass with its own visual review, not a mechanical
+rebase of ac6f519.
