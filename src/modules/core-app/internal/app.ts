@@ -18,7 +18,10 @@ import {
   createReflectionModal,
   createStoryScreen,
   createTasksPanel,
+  createToastHost,
+  createTreeSlots,
   createXpBar,
+  plantRejectionFeedback,
 } from '../../ui/index.ts';
 import type { Game } from './game.ts';
 import { createGame } from './game.ts';
@@ -121,6 +124,22 @@ async function startIsland(host: HTMLElement, game: Game): Promise<void> {
   const xpBar = createXpBar();
   dock(xpBar.el, { top: '16px', left: '50%', transform: 'translateX(-50%)' });
 
+  const treeSlots = createTreeSlots();
+  dock(treeSlots.el, { top: '40px', left: '50%', transform: 'translateX(-50%)' });
+
+  // Toast host positions itself (fixed bottom-center) — appended, not docked.
+  const toasts = createToastHost();
+  overlay.appendChild(toasts.el);
+
+  /** Toast a plant rejection; off-island taps stay silent. */
+  const toastRejection = (
+    reason: Parameters<typeof plantRejectionFeedback>[0],
+    source: 'tap' | 'plant',
+  ): void => {
+    const feedback = plantRejectionFeedback(reason, source);
+    if (feedback) toasts.show(feedback.message, feedback.variant);
+  };
+
   const coachTransport = createProxyTransport();
 
   const reflectionModal = createReflectionModal({
@@ -148,8 +167,10 @@ async function startIsland(host: HTMLElement, game: Game): Promise<void> {
 
   const modal = createPlantingModal({
     onPlant: ({ tile, templateKey, type, grown }) => {
-      if (grown) game.devPlantFullyGrown(tile, templateKey, type);
-      else game.plantAt(tile, templateKey, type);
+      const outcome = grown
+        ? game.devPlantFullyGrown(tile, templateKey, type)
+        : game.plantAt(tile, templateKey, type);
+      if (!outcome.ok) toastRejection(outcome.reason, 'plant');
     },
     createGoalChat: coachFactory('goal', coachTransport),
   });
@@ -166,7 +187,9 @@ async function startIsland(host: HTMLElement, game: Game): Promise<void> {
       game.focusTree(tree.id);
       return;
     }
-    if (game.canPlantAt(tile).ok) modal.open(state, tile);
+    const verdict = game.canPlantAt(tile);
+    if (verdict.ok) modal.open(state, tile);
+    else toastRejection(verdict.reason, 'tap');
   });
 
   // ── Re-render everything on every controller change ───────────────────────
@@ -176,6 +199,7 @@ async function startIsland(host: HTMLElement, game: Game): Promise<void> {
     updateTrees(treeLayer, game.treeViewModels(), textures);
     tasksPanel.update(state);
     xpBar.update(state);
+    treeSlots.update(state);
     devPanel.update(state);
   };
   game.subscribe(rerender);
